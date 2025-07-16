@@ -29,3 +29,7 @@ sudo chmod +x /usr/local/bin/wireguard-manager.sh
 
 echo ">>> Launching WireGuard Manager (interactive)..."
 sudo bash /usr/local/bin/wireguard-manager.sh
+
+echo ">>> Installing WireGuard kernel support..."
+sudo apt install -y linux-headers-$(uname -r) dkms wireguard-dkms
+sudo modprobe wireguard || echo "WireGuard module load failed"
