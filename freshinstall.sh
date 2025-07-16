@@ -10,7 +10,7 @@ sudo ubuntu-drivers autoinstall || echo "No proprietary drivers found or require
 
 echo ">>> Installing common utilities..."
 sudo apt install -y \
-  curl wget git net-tools fastfetch lsd mc micro rclone \
+  curl wget git net-tools lsd mc micro rclone \
   btop tldr bash-completion resolvconf wireguard-tools openssh-server
 
 echo ">>> Enabling and starting SSH..."
