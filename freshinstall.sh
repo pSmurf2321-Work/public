@@ -3,6 +3,10 @@
 # Exit on errors, unset vars, and pipe failures
 set -euo pipefail
 
+echo ">>> Ensuring required base tools are present..."
+sudo apt update
+sudo apt install -y curl ca-certificates
+
 echo ">>> Updating system..."
 sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y
 
