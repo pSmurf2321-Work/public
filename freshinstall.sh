@@ -1,11 +1,11 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 echo ">>> Updating system..."
 sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y
 
-echo ">>> Installing hardware drivers..."
+echo ">>> Installing hardware drivers (if available)..."
 sudo ubuntu-drivers autoinstall || echo "No proprietary drivers found or required."
 
 echo ">>> Installing common utilities..."
@@ -17,7 +17,9 @@ echo ">>> Enabling and starting SSH..."
 sudo systemctl enable ssh
 sudo systemctl start ssh
 
-sudo curl https://getmic.ro | bash
+echo ">>> Installing micro (latest from getmic.ro)..."
+cd /usr/local/bin && sudo curl -fsSL https://getmic.ro | sudo bash
+sudo chmod +x /usr/local/bin/micro
 
 echo ">>> Installing WireGuard Manager..."
 sudo curl -fsSL \
