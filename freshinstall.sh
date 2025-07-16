@@ -21,6 +21,10 @@ echo ">>> Installing micro (latest from getmic.ro)..."
 cd /usr/local/bin && sudo curl -fsSL https://getmic.ro | sudo bash
 sudo chmod +x /usr/local/bin/micro
 
+echo ">>> Installing WireGuard kernel support..."
+sudo apt install -y linux-headers-$(uname -r) dkms wireguard-dkms
+sudo modprobe wireguard || echo "WireGuard module load failed"
+
 echo ">>> Installing WireGuard Manager..."
 sudo curl -fsSL \
   https://raw.githubusercontent.com/complexorganizations/wireguard-manager/main/wireguard-manager.sh \
@@ -29,7 +33,3 @@ sudo chmod +x /usr/local/bin/wireguard-manager.sh
 
 echo ">>> Launching WireGuard Manager (interactive)..."
 sudo bash /usr/local/bin/wireguard-manager.sh
-
-echo ">>> Installing WireGuard kernel support..."
-sudo apt install -y linux-headers-$(uname -r) dkms wireguard-dkms
-sudo modprobe wireguard || echo "WireGuard module load failed"
