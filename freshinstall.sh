@@ -17,6 +17,8 @@ echo ">>> Enabling and starting SSH..."
 sudo systemctl enable ssh
 sudo systemctl start ssh
 
+sudo curl https://getmic.ro | bash
+
 echo ">>> Installing WireGuard Manager..."
 sudo curl -fsSL \
   https://raw.githubusercontent.com/complexorganizations/wireguard-manager/main/wireguard-manager.sh \
