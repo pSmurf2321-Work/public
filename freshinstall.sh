@@ -36,7 +36,13 @@ sudo chmod a+r /etc/apt/keyrings/docker-archive-keyring.gpg
 ARCH=$(dpkg --print-architecture)
 UBUNTU_CODENAME=$(lsb_release -cs)
 
-echo "deb [arch=$ARCH signed-by=/etc/apt/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu jammy stable" | sudo tee /etc/apt/sources.list.d/docker.list
+# Write repo with correct key path
+echo "deb [arch=$ARCH signed-by=/etc/apt/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $UBUNTU_CODENAME stable" | sudo tee /etc/apt/sources.list.d/docker.list
+
+# Fix possible wrong key path in docker.list to avoid NO_PUBKEY errors
+if grep -q "signed-by=/etc/apt/keyrings/docker.gpg" /etc/apt/sources.list.d/docker.list; then
+  sudo sed -i 's|signed-by=/etc/apt/keyrings/docker.gpg|signed-by=/etc/apt/keyrings/docker-archive-keyring.gpg|' /etc/apt/sources.list.d/docker.list
+fi
 
 sudo apt-get clean
 sudo apt-get update
