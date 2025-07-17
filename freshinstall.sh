@@ -1,6 +1,30 @@
 #!/bin/bash
 set -euo pipefail
 
+# Make sure $HOME/bin exists
+mkdir -p "$HOME/bin"
+
+# Make generate-service-scripts.sh executable
+chmod +x /home/homeserver/HomeServer/scripts/generate-service-scripts.sh
+
+# Add $HOME/bin to PATH in ~/.bashrc if not already there
+if ! grep -q 'export PATH="$HOME/bin:$PATH"' "$HOME/.bashrc"; then
+  echo 'export PATH="$HOME/bin:$PATH"' >> "$HOME/.bashrc"
+  echo "Added \$HOME/bin to PATH in ~/.bashrc"
+fi
+
+# Source ~/.bashrc to update current session PATH (only if not already in PATH)
+case ":$PATH:" in
+  *":$HOME/bin:"*) ;;
+  *)
+    echo "Sourcing ~/.bashrc to update PATH for this session"
+    # shellcheck disable=SC1090
+    source "$HOME/.bashrc"
+    ;;
+esac
+
+echo "Setup done. You can now run generate-service-scripts.sh separately to generate scripts."
+
 USER_NAME="${SUDO_USER:-$(whoami)}"
 USER_HOME=$(eval echo "~$USER_NAME")
 
