@@ -58,13 +58,21 @@ chown -R homeserver:homeserver "$HOMESERVER_ROOT"
 
 HOMESERVER_DIR="$USER_HOME/HomeServer"
 
-if [ ! -d "$HOMESERVER_DIR/.git" ]; then
+if [ -d "$HOMESERVER_DIR" ]; then
+  if [ ! -d "$HOMESERVER_DIR/.git" ]; then
+    echo "Folder $HOMESERVER_DIR exists but is not a git repo. Removing it for fresh clone..."
+    sudo rm -rf "$HOMESERVER_DIR"
+  fi
+fi
+
+if [ ! -d "$HOMESERVER_DIR" ]; then
   echo "Cloning private repo via SSH..."
   sudo -u "$USER_NAME" git clone git@github.com:pSmurf2321-Work/HomeServer.git "$HOMESERVER_DIR"
 else
   echo "Repo already cloned, pulling latest changes..."
   sudo -u "$USER_NAME" git -C "$HOMESERVER_DIR" pull --rebase
 fi
+
 
 # --- 5. System update and base packages install ---
 
