@@ -44,7 +44,7 @@ sudo apt-get update
 
 # --- 3. Create required folders ---
 
-export HOMESERVER_ROOT=/home/homeserver/HomeServer
+export HOMESERVER_ROOT=$USER_HOME
 
 mkdir -p "$HOMESERVER_ROOT"/{backups/minecraft/server-{1,2},docker}
 mkdir -p "$HOMESERVER_ROOT"/docker/{homepage/config,minecraft/server-{1,2}/data,notifiarr/config,nzbget/config,portainer/data,prowlarr/config,qbittorrent/config,radarr/config,sonarr/config,wireguard/config,watchtower,bazarr/config,vpnclient/config}
