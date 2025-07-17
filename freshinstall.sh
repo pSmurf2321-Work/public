@@ -171,15 +171,15 @@ echo "Then run your start-services.sh script from $HOMESERVER_DIR to start your 
 
 # --- 13. Make start/stop scripts globally accessible ---
 
-if [ -f "$HOMESERVER_DIR/start-services.sh" ]; then
-  sudo ln -sf "$HOMESERVER_DIR/start-services.sh" /usr/local/bin/start-services
-  sudo chmod +x "$HOMESERVER_DIR/start-services.sh"
+if [ -f "$HOMESERVER_DIR/scripts/start-services.sh" ]; then
+  sudo ln -sf "$HOMESERVER_DIR/scripts/start-services.sh" /usr/local/bin/start-services
+  sudo chmod +x "$HOMESERVER_DIR/scripts/start-services.sh"
   echo "Symlinked start-services.sh to /usr/local/bin/start-services"
 fi
 
-if [ -f "$HOMESERVER_DIR/stop-services.sh" ]; then
-  sudo ln -sf "$HOMESERVER_DIR/stop-services.sh" /usr/local/bin/stop-services
-  sudo chmod +x "$HOMESERVER_DIR/stop-services.sh"
+if [ -f "$HOMESERVER_DIR/scripts/stop-services.sh" ]; then
+  sudo ln -sf "$HOMESERVER_DIR/scripts/stop-services.sh" /usr/local/bin/stop-services
+  sudo chmod +x "$HOMESERVER_DIR/scripts/stop-services.sh"
   echo "Symlinked stop-services.sh to /usr/local/bin/stop-services"
 fi
 
