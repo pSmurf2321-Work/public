@@ -30,7 +30,7 @@ ssh-add -l | grep -q "$SSH_KEY" || ssh-add "$SSH_KEY"
 # --- 2. Docker GPG key and repository setup ---
 
 sudo mkdir -p /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/keyrings/docker-archive-keyring.gpg > /dev/null
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor | sudo tee /etc/apt/keyrings/docker-archive-keyring.gpg > /dev/null
 sudo chmod a+r /etc/apt/keyrings/docker-archive-keyring.gpg
 
 ARCH=$(dpkg --print-architecture)
@@ -38,11 +38,6 @@ UBUNTU_CODENAME=$(lsb_release -cs)
 
 # Write repo with correct key path
 echo "deb [arch=$ARCH signed-by=/etc/apt/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $UBUNTU_CODENAME stable" | sudo tee /etc/apt/sources.list.d/docker.list
-
-# Fix possible wrong key path in docker.list to avoid NO_PUBKEY errors
-if grep -q "signed-by=/etc/apt/keyrings/docker.gpg" /etc/apt/sources.list.d/docker.list; then
-  sudo sed -i 's|signed-by=/etc/apt/keyrings/docker.gpg|signed-by=/etc/apt/keyrings/docker-archive-keyring.gpg|' /etc/apt/sources.list.d/docker.list
-fi
 
 sudo apt-get clean
 sudo apt-get update
