@@ -162,6 +162,8 @@ else
   echo "  sudo bash $WIREGUARD_MANAGER_PATH"
 fi
 
+export PATH="$HOME/bin:$PATH"
+
 # --- 12. Final notes ---
 echo
 echo ">>> Setup complete!"
