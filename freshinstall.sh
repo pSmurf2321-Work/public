@@ -58,7 +58,7 @@ chown -R homeserver:homeserver "$HOMESERVER_ROOT"
 
 HOMESERVER_DIR="$USER_HOME/HomeServer"
 
-if [ ! -d "$HOMESERVER_DIR" ]; then
+if [ ! -d "$HOMESERVER_DIR/.git" ]; then
   echo "Cloning private repo via SSH..."
   sudo -u "$USER_NAME" git clone git@github.com:pSmurf2321-Work/HomeServer.git "$HOMESERVER_DIR"
 else
