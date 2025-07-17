@@ -36,7 +36,7 @@ sudo chmod a+r /etc/apt/keyrings/docker-archive-keyring.gpg
 ARCH=$(dpkg --print-architecture)
 UBUNTU_CODENAME=$(lsb_release -cs)
 
-echo "deb [arch=$ARCH signed-by=/etc/apt/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $UBUNTU_CODENAME stable" | sudo tee /etc/apt/sources.list.d/docker.list
+echo "deb [arch=$ARCH signed-by=/etc/apt/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu jammy stable" | sudo tee /etc/apt/sources.list.d/docker.list
 
 sudo apt-get clean
 sudo apt-get update
