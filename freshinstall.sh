@@ -27,6 +27,19 @@ fi
 eval "$(ssh-agent -s)" > /dev/null
 ssh-add -l | grep -q "$SSH_KEY" || ssh-add "$SSH_KEY"
 
+
+
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/keyrings/docker-archive-keyring.gpg > /dev/null
+sudo chmod a+r /etc/apt/keyrings/docker-archive-keyring.gpg
+
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list
+
+sudo apt-get clean
+sudo apt-get update
+
+
+
 # --- 2. Clone or update private repo via SSH ---
 
 HOMESERVER_DIR="$USER_HOME/HomeServer"
