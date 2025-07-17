@@ -136,7 +136,7 @@ find "$HOMESERVER_DIR" -type d -exec sudo chmod g+s {} +
 echo "Ownership, permissions, and setgid bit set."
 
 # --- 10. Install WireGuard kernel support ---
-sudo apt install -y linux-headers-$(uname -r) dkms wireguard-dkms
+sudo apt install -y wireguard
 
 if ! lsmod | grep -q wireguard; then
   if ! sudo modprobe wireguard; then
