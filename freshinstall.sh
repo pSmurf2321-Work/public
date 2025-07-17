@@ -41,19 +41,7 @@ echo "deb [arch=$ARCH signed-by=/etc/apt/keyrings/docker-archive-keyring.gpg] ht
 sudo apt-get clean
 sudo apt-get update
 
-# --- 3. Clone or update private repo via SSH ---
-
-HOMESERVER_DIR="$USER_HOME/HomeServer"
-
-if [ ! -d "$HOMESERVER_DIR" ]; then
-  echo "Cloning private repo via SSH..."
-  sudo -u "$USER_NAME" git clone git@github.com:pSmurf2321-Work/HomeServer.git "$HOMESERVER_DIR"
-else
-  echo "Repo already cloned, pulling latest changes..."
-  sudo -u "$USER_NAME" git -C "$HOMESERVER_DIR" pull --rebase
-fi
-
-# --- 4. Create required folders ---
+# --- 3. Create required folders ---
 
 export HOMESERVER_ROOT=/home/homeserver/HomeServer
 
@@ -64,6 +52,18 @@ mkdir -p "$HOMESERVER_ROOT/scripts"
 mkdir -p "$HOMESERVER_ROOT/yaml"
 
 chown -R homeserver:homeserver "$HOMESERVER_ROOT"
+
+# --- 4. Clone or update private repo via SSH ---
+
+HOMESERVER_DIR="$USER_HOME/HomeServer"
+
+if [ ! -d "$HOMESERVER_DIR" ]; then
+  echo "Cloning private repo via SSH..."
+  sudo -u "$USER_NAME" git clone git@github.com:pSmurf2321-Work/HomeServer.git "$HOMESERVER_DIR"
+else
+  echo "Repo already cloned, pulling latest changes..."
+  sudo -u "$USER_NAME" git -C "$HOMESERVER_DIR" pull --rebase
+fi
 
 # --- 5. System update and base packages install ---
 
