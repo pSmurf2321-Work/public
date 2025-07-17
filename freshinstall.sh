@@ -183,4 +183,8 @@ if [ -f "$HOMESERVER_DIR/scripts/stop-services.sh" ]; then
   echo "Symlinked stop-services.sh to /usr/local/bin/stop-services"
 fi
 
+docker network create --subnet=172.18.0.0/24 VPN-network
+docker network create --subnet=172.19.0.0/24 Wireguard-network
+docker network create --subnet=172.20.0.0/24 HomeServer-network
+
 exit 0
