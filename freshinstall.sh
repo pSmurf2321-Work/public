@@ -1,13 +1,45 @@
 #!/bin/bash
-# Run this script with sudo: sudo ./setup.sh
 set -euo pipefail
 
-# Determine real user invoking sudo (or fallback to root)
 USER_NAME="${SUDO_USER:-$(whoami)}"
 USER_HOME=$(eval echo "~$USER_NAME")
 
-echo ">>> Running as user: $USER_NAME"
-echo ">>> User home directory: $USER_HOME"
+echo "Running as user: $USER_NAME"
+echo "User home directory: $USER_HOME"
+
+# --- 1. Check or create SSH key for GitHub access ---
+
+SSH_KEY="$USER_HOME/.ssh/id_ed25519"
+PUB_KEY="$SSH_KEY.pub"
+
+if [ ! -f "$SSH_KEY" ]; then
+  echo "No SSH key found. Generating new SSH key..."
+  sudo -u "$USER_NAME" ssh-keygen -t ed25519 -C "setup@freshinstall" -f "$SSH_KEY" -N ""
+  echo
+  echo ">>> SSH public key (add this to your GitHub Deploy Keys or SSH keys):"
+  cat "$PUB_KEY"
+  echo
+  echo "Add this SSH key to GitHub, then re-run this script."
+  exit 1
+fi
+
+# Start ssh-agent and add key if not already added
+eval "$(ssh-agent -s)" > /dev/null
+ssh-add -l | grep -q "$SSH_KEY" || ssh-add "$SSH_KEY"
+
+# --- 2. Clone or update private repo via SSH ---
+
+HOMESERVER_DIR="$USER_HOME/HomeServer"
+
+if [ ! -d "$HOMESERVER_DIR" ]; then
+  echo "Cloning private repo via SSH..."
+  sudo -u "$USER_NAME" git clone git@github.com:pSmurf2321-Work/HomeServer.git "$HOMESERVER_DIR"
+else
+  echo "Repo already cloned, pulling latest changes..."
+  sudo -u "$USER_NAME" git -C "$HOMESERVER_DIR" pull --rebase
+fi
+
+# --- 3. Update & install base packages ---
 
 echo ">>> Updating package lists and installing base tools..."
 apt update
@@ -35,7 +67,8 @@ echo ">>> Enabling and starting SSH service..."
 systemctl enable ssh
 systemctl start ssh
 
-echo ">>> Installing latest micro editor from GitHub releases..."
+# --- 4. Install latest micro editor from GitHub releases ---
+
 MICRO_BIN="/usr/local/bin/micro"
 if ! command -v micro &> /dev/null; then
   MICRO_LATEST_URL=$(curl -s https://api.github.com/repos/zyedidia/micro/releases/latest | grep browser_download_url | grep linux64.tar.gz | cut -d '"' -f 4)
@@ -49,7 +82,8 @@ else
   echo "micro already installed, skipping."
 fi
 
-echo ">>> Setting up Docker repository and installing Docker..."
+# --- 5. Install Docker and set up repo ---
+
 if [ ! -f /etc/apt/keyrings/docker-archive-keyring.gpg ]; then
   mkdir -p /etc/apt/keyrings
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | tee /etc/apt/keyrings/docker-archive-keyring.gpg > /dev/null
@@ -75,7 +109,8 @@ else
   echo "User '$USER_NAME' added to docker group."
 fi
 
-echo ">>> Installing WireGuard kernel support..."
+# --- 6. Install WireGuard kernel support ---
+
 apt install -y linux-headers-$(uname -r) dkms wireguard-dkms
 
 if ! lsmod | grep -q wireguard; then
@@ -88,7 +123,8 @@ else
   echo "WireGuard module already loaded."
 fi
 
-echo ">>> Installing WireGuard Manager script..."
+# --- 7. Install WireGuard Manager script ---
+
 WIREGUARD_MANAGER_PATH="/usr/local/bin/wireguard-manager.sh"
 curl -fsSL https://raw.githubusercontent.com/complexorganizations/wireguard-manager/main/wireguard-manager.sh -o "$WIREGUARD_MANAGER_PATH"
 chmod +x "$WIREGUARD_MANAGER_PATH"
@@ -97,19 +133,17 @@ if [[ "${1:-}" == "--wg-manager" ]]; then
   echo ">>> Launching WireGuard Manager (interactive)..."
   bash "$WIREGUARD_MANAGER_PATH"
 else
-  echo "WireGuard Manager install complete. To launch it interactively, run:"
+  echo "WireGuard Manager install complete."
+  echo "To launch it interactively, run:"
   echo "  sudo bash $WIREGUARD_MANAGER_PATH"
-  echo "Or rerun this script with --wg-manager argument."
 fi
 
-echo ">>> Cloning HomeServer config repo to $USER_HOME/HomeServer..."
-HOMESERVER_DIR="$USER_HOME/HomeServer"
+# --- 8. Final notes ---
 
-if [ -d "$HOMESERVER_DIR" ]; then
-  echo "HomeServer directory already exists. Attempting to update..."
-  git -C "$HOMESERVER_DIR" pull --rebase || echo "Git pull failed. You may want to check repository manually."
-else
-  sudo -u "$USER_NAME" git clone https://github.com/pSmurf2321-Work/HomeServer.git "$HOMESERVER_DIR"
-fi
+echo
+echo ">>> Setup complete!"
+echo "Remember to log out and back in or reboot to apply docker group permissions."
+echo "After that, place your .env file into $HOMESERVER_DIR if needed."
+echo "Then run your start-services.sh script from $HOMESERVER_DIR to start your Docker services."
 
-echo ">>> Setup complete. Remember to logout and login again for docker group changes to apply."
+exit 0
