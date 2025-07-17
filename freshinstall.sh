@@ -109,7 +109,26 @@ else
   echo "User '$USER_NAME' added to docker group."
 fi
 
-# --- 6. Install WireGuard kernel support ---
+# --- 6. Copy env.bak to .env ---
+
+if [ -f "$HOMESERVER_DIR/etc/env.bak" ]; then
+  cp -f "$HOMESERVER_DIR/etc/env.bak" "$HOMESERVER_DIR/.env"
+  echo "Copied env.bak to .env, overwriting existing .env if present."
+else
+  echo "Warning: env.bak not found in $HOMESERVER_DIR. .env file not created."
+fi
+
+
+# ---7. Fix ownership and permissions for HomeServer directory ---
+
+echo ">>> Setting ownership and permissions for $HOMESERVER_DIR..."
+chown -R "$USER_NAME":"$USER_NAME" "$HOMESERVER_DIR"
+chmod -R u+rwX "$HOMESERVER_DIR"
+
+echo "Ownership and permissions fixed."
+
+
+# --- 8. Install WireGuard kernel support ---
 
 apt install -y linux-headers-$(uname -r) dkms wireguard-dkms
 
@@ -123,7 +142,7 @@ else
   echo "WireGuard module already loaded."
 fi
 
-# --- 7. Install WireGuard Manager script ---
+# --- 9. Install WireGuard Manager script ---
 
 WIREGUARD_MANAGER_PATH="/usr/local/bin/wireguard-manager.sh"
 curl -fsSL https://raw.githubusercontent.com/complexorganizations/wireguard-manager/main/wireguard-manager.sh -o "$WIREGUARD_MANAGER_PATH"
@@ -138,7 +157,7 @@ else
   echo "  sudo bash $WIREGUARD_MANAGER_PATH"
 fi
 
-# --- 8. Final notes ---
+# --- 10. Final notes ---
 
 echo
 echo ">>> Setup complete!"
