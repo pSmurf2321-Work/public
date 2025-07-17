@@ -27,17 +27,21 @@ fi
 eval "$(ssh-agent -s)" > /dev/null
 ssh-add -l | grep -q "$SSH_KEY" || ssh-add "$SSH_KEY"
 
-# --- Docker GPG key and repo setup ---
+# --- 2. Docker GPG key and repository setup ---
+
 sudo mkdir -p /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/keyrings/docker-archive-keyring.gpg > /dev/null
 sudo chmod a+r /etc/apt/keyrings/docker-archive-keyring.gpg
 
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list
+ARCH=$(dpkg --print-architecture)
+UBUNTU_CODENAME=$(lsb_release -cs)
+
+echo "deb [arch=$ARCH signed-by=/etc/apt/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $UBUNTU_CODENAME stable" | sudo tee /etc/apt/sources.list.d/docker.list
 
 sudo apt-get clean
 sudo apt-get update
 
-# --- 2. Clone or update private repo via SSH ---
+# --- 3. Clone or update private repo via SSH ---
 
 HOMESERVER_DIR="$USER_HOME/HomeServer"
 
@@ -49,43 +53,27 @@ else
   sudo -u "$USER_NAME" git -C "$HOMESERVER_DIR" pull --rebase
 fi
 
-# --- 3. Create folders ---
+# --- 4. Create required folders ---
 
 export HOMESERVER_ROOT=/home/homeserver/HomeServer
 
-mkdir -p $HOMESERVER_ROOT/{backups/minecraft/server-{1,2},docker}
-
-mkdir -p $HOMESERVER_ROOT/docker/{ \
-  homepage/config, \
-  minecraft/server-{1,2}/data, \
-  notifiarr/config, \
-  nzbget/config, \
-  portainer/data, \
-  prowlarr/config, \
-  qbittorrent/config, \
-  radarr/config, \
-  sonarr/config, \
-  wireguard/config, \
-  watchtower, \
-  bazarr/config, \
-  vpnclient/config \
-}
-
+mkdir -p "$HOMESERVER_ROOT"/{backups/minecraft/server-{1,2},docker}
+mkdir -p "$HOMESERVER_ROOT"/docker/{homepage/config,minecraft/server-{1,2}/data,notifiarr/config,nzbget/config,portainer/data,prowlarr/config,qbittorrent/config,radarr/config,sonarr/config,wireguard/config,watchtower,bazarr/config,vpnclient/config}
 mkdir -p "$HOMESERVER_ROOT/downloaded media"
 mkdir -p "$HOMESERVER_ROOT/scripts"
 mkdir -p "$HOMESERVER_ROOT/yaml"
 
-chown -R homeserver:homeserver $HOMESERVER_ROOT
+chown -R homeserver:homeserver "$HOMESERVER_ROOT"
 
-# --- 4. Update & install base packages ---
+# --- 5. System update and base packages install ---
 
 echo ">>> Updating package lists and installing base tools..."
-apt update
-apt install -y curl ca-certificates gnupg lsb-release
+sudo apt update
+sudo apt install -y curl ca-certificates gnupg lsb-release
 
 echo ">>> Upgrading system packages..."
-apt upgrade -y
-apt autoremove -y
+sudo apt upgrade -y
+sudo apt autoremove -y
 
 echo ">>> Installing hardware drivers (if available)..."
 if ! ubuntu-drivers autoinstall; then
@@ -93,19 +81,17 @@ if ! ubuntu-drivers autoinstall; then
 fi
 
 echo ">>> Installing common utilities..."
-apt install -y \
-  curl wget git net-tools lsd mc micro rclone \
-  btop tldr bash-completion resolvconf wireguard-tools openssh-server
+sudo apt install -y curl wget git net-tools lsd mc micro rclone btop tldr bash-completion resolvconf wireguard-tools openssh-server
 
 echo ">>> Removing old Docker packages if any..."
-apt-get purge -y docker.io docker-doc docker-compose docker-compose-plugin podman-docker containerd runc || true
-apt-get autoremove -y
+sudo apt-get purge -y docker.io docker-doc docker-compose docker-compose-plugin podman-docker containerd runc || true
+sudo apt-get autoremove -y
 
 echo ">>> Enabling and starting SSH service..."
-systemctl enable ssh
-systemctl start ssh
+sudo systemctl enable ssh
+sudo systemctl start ssh
 
-# --- 5. Install latest micro editor from GitHub releases ---
+# --- 6. Install latest micro editor from GitHub releases ---
 
 MICRO_BIN="/usr/local/bin/micro"
 if ! command -v micro &> /dev/null; then
@@ -113,41 +99,27 @@ if ! command -v micro &> /dev/null; then
   TMPDIR=$(mktemp -d)
   curl -L "$MICRO_LATEST_URL" -o "$TMPDIR/micro.tar.gz"
   tar -xzf "$TMPDIR/micro.tar.gz" -C "$TMPDIR"
-  install "$TMPDIR/micro" "$MICRO_BIN"
-  chmod +x "$MICRO_BIN"
+  sudo install "$TMPDIR/micro" "$MICRO_BIN"
+  sudo chmod +x "$MICRO_BIN"
   rm -rf "$TMPDIR"
 else
   echo "micro already installed, skipping."
 fi
 
-# --- 6. Install Docker and set up repo ---
+# --- 7. Install Docker packages ---
 
-if [ ! -f /etc/apt/keyrings/docker-archive-keyring.gpg ]; then
-  mkdir -p /etc/apt/keyrings
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | tee /etc/apt/keyrings/docker-archive-keyring.gpg > /dev/null
-  chmod a+r /etc/apt/keyrings/docker-archive-keyring.gpg
-fi
-
-ARCH=$(dpkg --print-architecture)
-UBUNTU_CODENAME=$(lsb_release -cs)
-
-DOCKER_LIST_FILE="/etc/apt/sources.list.d/docker.list"
-if ! grep -q "download.docker.com" "$DOCKER_LIST_FILE" 2>/dev/null; then
-  echo "deb [arch=$ARCH signed-by=/etc/apt/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $UBUNTU_CODENAME stable" > "$DOCKER_LIST_FILE"
-fi
-
-apt-get update
-apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 echo ">>> Adding user '$USER_NAME' to docker group (logout/login required)..."
 if groups "$USER_NAME" | grep -q '\bdocker\b'; then
   echo "User '$USER_NAME' is already in docker group."
 else
-  usermod -aG docker "$USER_NAME"
+  sudo usermod -aG docker "$USER_NAME"
   echo "User '$USER_NAME' added to docker group."
 fi
 
-# --- 7. Copy env.bak to .env ---
+# --- 8. Copy env.bak to .env ---
 
 if [ -f "$HOMESERVER_DIR/etc/env.bak" ]; then
   cp -f "$HOMESERVER_DIR/etc/env.bak" "$HOMESERVER_DIR/.env"
@@ -156,21 +128,21 @@ else
   echo "Warning: env.bak not found in $HOMESERVER_DIR. .env file not created."
 fi
 
-# --- 8. Fix ownership and setgid bit on HomeServer directory ---
+# --- 9. Fix ownership and setgid bit on HomeServer directory ---
 
 echo ">>> Setting ownership and permissions for $HOMESERVER_DIR..."
-chown -R "$USER_NAME":"$USER_NAME" "$HOMESERVER_DIR"
-chmod -R u+rwX "$HOMESERVER_DIR"
-find "$HOMESERVER_DIR" -type d -exec chmod g+s {} +
+sudo chown -R "$USER_NAME":"$USER_NAME" "$HOMESERVER_DIR"
+sudo chmod -R u+rwX "$HOMESERVER_DIR"
+find "$HOMESERVER_DIR" -type d -exec sudo chmod g+s {} +
 
 echo "Ownership, permissions, and setgid bit set."
 
-# --- 9. Install WireGuard kernel support ---
+# --- 10. Install WireGuard kernel support ---
 
-apt install -y linux-headers-$(uname -r) dkms wireguard-dkms
+sudo apt install -y linux-headers-$(uname -r) dkms wireguard-dkms
 
 if ! lsmod | grep -q wireguard; then
-  if ! modprobe wireguard; then
+  if ! sudo modprobe wireguard; then
     echo "Warning: WireGuard kernel module failed to load."
   else
     echo "WireGuard module loaded."
@@ -179,11 +151,11 @@ else
   echo "WireGuard module already loaded."
 fi
 
-# --- 10. Install WireGuard Manager script ---
+# --- 11. Install WireGuard Manager script ---
 
 WIREGUARD_MANAGER_PATH="/usr/local/bin/wireguard-manager.sh"
-curl -fsSL https://raw.githubusercontent.com/complexorganizations/wireguard-manager/main/wireguard-manager.sh -o "$WIREGUARD_MANAGER_PATH"
-chmod +x "$WIREGUARD_MANAGER_PATH"
+sudo curl -fsSL https://raw.githubusercontent.com/complexorganizations/wireguard-manager/main/wireguard-manager.sh -o "$WIREGUARD_MANAGER_PATH"
+sudo chmod +x "$WIREGUARD_MANAGER_PATH"
 
 if [[ "${1:-}" == "--wg-manager" ]]; then
   echo ">>> Launching WireGuard Manager (interactive)..."
@@ -194,7 +166,7 @@ else
   echo "  sudo bash $WIREGUARD_MANAGER_PATH"
 fi
 
-# --- 11. Final notes ---
+# --- 12. Final notes ---
 
 echo
 echo ">>> Setup complete!"
