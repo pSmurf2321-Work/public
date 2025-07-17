@@ -39,6 +39,38 @@ else
   sudo -u "$USER_NAME" git -C "$HOMESERVER_DIR" pull --rebase
 fi
 
+
+#!/bin/bash
+
+export HOMESERVER_ROOT=/home/homeserver/HomeServer
+
+mkdir -p $HOMESERVER_ROOT/{backups/minecraft/server-{1,2},docker}
+
+mkdir -p $HOMESERVER_ROOT/docker/{ \
+  homepage/config, \
+  minecraft/server-{1,2}/data, \
+  notifiarr/config, \
+  nzbget/config, \
+  portainer/data, \
+  prowlarr/config, \
+  qbittorrent/config, \
+  radarr/config, \
+  sonarr/config, \
+  wireguard/config, \
+  watchtower \
+}
+
+mkdir -p "$HOMESERVER_ROOT/downloaded media"
+mkdir -p "$HOMESERVER_ROOT/scripts"
+mkdir -p "$HOMESERVER_ROOT/yaml"
+
+
+chown -R homeserver:homeserver $HOMESERVER_ROOT
+
+
+
+
+
 # --- 3. Update & install base packages ---
 
 echo ">>> Updating package lists and installing base tools..."
