@@ -8,7 +8,6 @@ echo "Running as user: $USER_NAME"
 echo "User home directory: $USER_HOME"
 
 # --- 1. Check or create SSH key for GitHub access ---
-
 SSH_KEY="$USER_HOME/.ssh/id_ed25519"
 PUB_KEY="$SSH_KEY.pub"
 
@@ -28,7 +27,6 @@ eval "$(ssh-agent -s)" > /dev/null
 ssh-add -l | grep -q "$SSH_KEY" || ssh-add "$SSH_KEY"
 
 # --- 2. Docker GPG key and repository setup ---
-
 sudo mkdir -p /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor | sudo tee /etc/apt/keyrings/docker-archive-keyring.gpg > /dev/null
 sudo chmod a+r /etc/apt/keyrings/docker-archive-keyring.gpg
@@ -36,15 +34,13 @@ sudo chmod a+r /etc/apt/keyrings/docker-archive-keyring.gpg
 ARCH=$(dpkg --print-architecture)
 UBUNTU_CODENAME=$(lsb_release -cs)
 
-# Write repo with correct key path
 echo "deb [arch=$ARCH signed-by=/etc/apt/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $UBUNTU_CODENAME stable" | sudo tee /etc/apt/sources.list.d/docker.list
 
 sudo apt-get clean
 sudo apt-get update
 
 # --- 3. Create required folders ---
-
-export HOMESERVER_ROOT=$USER_HOME
+export HOMESERVER_ROOT="$USER_HOME"
 
 mkdir -p "$HOMESERVER_ROOT"/{backups/minecraft/server-{1,2},docker}
 mkdir -p "$HOMESERVER_ROOT"/docker/{homepage/config,minecraft/server-{1,2}/data,notifiarr/config,nzbget/config,portainer/data,prowlarr/config,qbittorrent/config,radarr/config,sonarr/config,wireguard/config,watchtower,bazarr/config,vpnclient/config}
@@ -52,10 +48,9 @@ mkdir -p "$HOMESERVER_ROOT/downloaded media"
 mkdir -p "$HOMESERVER_ROOT/scripts"
 mkdir -p "$HOMESERVER_ROOT/yaml"
 
-chown -R homeserver:homeserver "$HOMESERVER_ROOT"
+chown -R "$USER_NAME":"$USER_NAME" "$HOMESERVER_ROOT"
 
 # --- 4. Clone or update private repo via SSH ---
-
 HOMESERVER_DIR="$USER_HOME/HomeServer"
 
 if [ -d "$HOMESERVER_DIR" ]; then
@@ -73,9 +68,7 @@ else
   sudo -u "$USER_NAME" git -C "$HOMESERVER_DIR" pull --rebase
 fi
 
-
 # --- 5. System update and base packages install ---
-
 echo ">>> Updating package lists and installing base tools..."
 sudo apt update
 sudo apt install -y curl ca-certificates gnupg lsb-release
@@ -101,7 +94,6 @@ sudo systemctl enable ssh
 sudo systemctl start ssh
 
 # --- 6. Install latest micro editor from GitHub releases ---
-
 MICRO_BIN="/usr/local/bin/micro"
 if ! command -v micro &> /dev/null; then
   MICRO_LATEST_URL=$(curl -s https://api.github.com/repos/zyedidia/micro/releases/latest | grep browser_download_url | grep linux64.tar.gz | cut -d '"' -f 4)
@@ -116,7 +108,6 @@ else
 fi
 
 # --- 7. Install Docker packages ---
-
 sudo apt-get update
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
@@ -129,7 +120,6 @@ else
 fi
 
 # --- 8. Copy env.bak to .env ---
-
 if [ -f "$HOMESERVER_DIR/etc/env.bak" ]; then
   cp -f "$HOMESERVER_DIR/etc/env.bak" "$HOMESERVER_DIR/.env"
   echo "Copied env.bak to .env, overwriting existing .env if present."
@@ -138,7 +128,6 @@ else
 fi
 
 # --- 9. Fix ownership and setgid bit on HomeServer directory ---
-
 echo ">>> Setting ownership and permissions for $HOMESERVER_DIR..."
 sudo chown -R "$USER_NAME":"$USER_NAME" "$HOMESERVER_DIR"
 sudo chmod -R u+rwX "$HOMESERVER_DIR"
@@ -147,7 +136,6 @@ find "$HOMESERVER_DIR" -type d -exec sudo chmod g+s {} +
 echo "Ownership, permissions, and setgid bit set."
 
 # --- 10. Install WireGuard kernel support ---
-
 sudo apt install -y linux-headers-$(uname -r) dkms wireguard-dkms
 
 if ! lsmod | grep -q wireguard; then
@@ -161,7 +149,6 @@ else
 fi
 
 # --- 11. Install WireGuard Manager script ---
-
 WIREGUARD_MANAGER_PATH="/usr/local/bin/wireguard-manager.sh"
 sudo curl -fsSL https://raw.githubusercontent.com/complexorganizations/wireguard-manager/main/wireguard-manager.sh -o "$WIREGUARD_MANAGER_PATH"
 sudo chmod +x "$WIREGUARD_MANAGER_PATH"
@@ -176,7 +163,6 @@ else
 fi
 
 # --- 12. Final notes ---
-
 echo
 echo ">>> Setup complete!"
 echo "Remember to log out and back in or reboot to apply docker group permissions."
