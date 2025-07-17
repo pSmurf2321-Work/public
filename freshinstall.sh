@@ -118,15 +118,14 @@ else
   echo "Warning: env.bak not found in $HOMESERVER_DIR. .env file not created."
 fi
 
-
-# ---7. Fix ownership and permissions for HomeServer directory ---
+# --- 7. Fix ownership and setgid bit on HomeServer directory ---
 
 echo ">>> Setting ownership and permissions for $HOMESERVER_DIR..."
 chown -R "$USER_NAME":"$USER_NAME" "$HOMESERVER_DIR"
 chmod -R u+rwX "$HOMESERVER_DIR"
+find "$HOMESERVER_DIR" -type d -exec chmod g+s {} +
 
-echo "Ownership and permissions fixed."
-
+echo "Ownership, permissions, and setgid bit set."
 
 # --- 8. Install WireGuard kernel support ---
 
