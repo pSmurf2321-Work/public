@@ -64,4 +64,4 @@ echo ">>> Launching WireGuard Manager (interactive)..."
 sudo bash /usr/local/bin/wireguard-manager.sh
 
 echo ">>> Cloning HomeServer config repo to /home/HomeServer..."
-git clone https://github.com/pSmurf2321-Work/HomeServer.git /home/HomeServer
+git clone https://github.com/pSmurf2321-Work/HomeServer.git /home/$USER/HomeServer
