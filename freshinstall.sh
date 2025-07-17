@@ -39,8 +39,7 @@ else
   sudo -u "$USER_NAME" git -C "$HOMESERVER_DIR" pull --rebase
 fi
 
-
-#!/bin/bash
+# --- 3. Create folders ---
 
 export HOMESERVER_ROOT=/home/homeserver/HomeServer
 
@@ -57,21 +56,18 @@ mkdir -p $HOMESERVER_ROOT/docker/{ \
   radarr/config, \
   sonarr/config, \
   wireguard/config, \
-  watchtower \
+  watchtower, \
+  bazarr/config, \
+  vpnclient/config \
 }
 
 mkdir -p "$HOMESERVER_ROOT/downloaded media"
 mkdir -p "$HOMESERVER_ROOT/scripts"
 mkdir -p "$HOMESERVER_ROOT/yaml"
 
-
 chown -R homeserver:homeserver $HOMESERVER_ROOT
 
-
-
-
-
-# --- 3. Update & install base packages ---
+# --- 4. Update & install base packages ---
 
 echo ">>> Updating package lists and installing base tools..."
 apt update
@@ -99,7 +95,7 @@ echo ">>> Enabling and starting SSH service..."
 systemctl enable ssh
 systemctl start ssh
 
-# --- 4. Install latest micro editor from GitHub releases ---
+# --- 5. Install latest micro editor from GitHub releases ---
 
 MICRO_BIN="/usr/local/bin/micro"
 if ! command -v micro &> /dev/null; then
@@ -114,7 +110,7 @@ else
   echo "micro already installed, skipping."
 fi
 
-# --- 5. Install Docker and set up repo ---
+# --- 6. Install Docker and set up repo ---
 
 if [ ! -f /etc/apt/keyrings/docker-archive-keyring.gpg ]; then
   mkdir -p /etc/apt/keyrings
@@ -141,7 +137,7 @@ else
   echo "User '$USER_NAME' added to docker group."
 fi
 
-# --- 6. Copy env.bak to .env ---
+# --- 7. Copy env.bak to .env ---
 
 if [ -f "$HOMESERVER_DIR/etc/env.bak" ]; then
   cp -f "$HOMESERVER_DIR/etc/env.bak" "$HOMESERVER_DIR/.env"
@@ -150,7 +146,7 @@ else
   echo "Warning: env.bak not found in $HOMESERVER_DIR. .env file not created."
 fi
 
-# --- 7. Fix ownership and setgid bit on HomeServer directory ---
+# --- 8. Fix ownership and setgid bit on HomeServer directory ---
 
 echo ">>> Setting ownership and permissions for $HOMESERVER_DIR..."
 chown -R "$USER_NAME":"$USER_NAME" "$HOMESERVER_DIR"
@@ -159,7 +155,7 @@ find "$HOMESERVER_DIR" -type d -exec chmod g+s {} +
 
 echo "Ownership, permissions, and setgid bit set."
 
-# --- 8. Install WireGuard kernel support ---
+# --- 9. Install WireGuard kernel support ---
 
 apt install -y linux-headers-$(uname -r) dkms wireguard-dkms
 
@@ -173,7 +169,7 @@ else
   echo "WireGuard module already loaded."
 fi
 
-# --- 9. Install WireGuard Manager script ---
+# --- 10. Install WireGuard Manager script ---
 
 WIREGUARD_MANAGER_PATH="/usr/local/bin/wireguard-manager.sh"
 curl -fsSL https://raw.githubusercontent.com/complexorganizations/wireguard-manager/main/wireguard-manager.sh -o "$WIREGUARD_MANAGER_PATH"
@@ -188,7 +184,7 @@ else
   echo "  sudo bash $WIREGUARD_MANAGER_PATH"
 fi
 
-# --- 10. Final notes ---
+# --- 11. Final notes ---
 
 echo
 echo ">>> Setup complete!"
