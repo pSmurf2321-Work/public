@@ -1,67 +1,115 @@
 #!/bin/bash
-
-# Exit on errors, unset vars, and pipe failures
+# Run this script with sudo: sudo ./setup.sh
 set -euo pipefail
 
-echo ">>> Ensuring required base tools are present..."
-sudo apt update
-sudo apt install -y curl ca-certificates
+# Determine real user invoking sudo (or fallback to root)
+USER_NAME="${SUDO_USER:-$(whoami)}"
+USER_HOME=$(eval echo "~$USER_NAME")
 
-echo ">>> Updating system..."
-sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y
+echo ">>> Running as user: $USER_NAME"
+echo ">>> User home directory: $USER_HOME"
+
+echo ">>> Updating package lists and installing base tools..."
+apt update
+apt install -y curl ca-certificates gnupg lsb-release
+
+echo ">>> Upgrading system packages..."
+apt upgrade -y
+apt autoremove -y
 
 echo ">>> Installing hardware drivers (if available)..."
-sudo ubuntu-drivers autoinstall || echo "No proprietary drivers found or required."
+if ! ubuntu-drivers autoinstall; then
+  echo "No proprietary drivers found or required."
+fi
 
 echo ">>> Installing common utilities..."
-sudo apt install -y \
+apt install -y \
   curl wget git net-tools lsd mc micro rclone \
   btop tldr bash-completion resolvconf wireguard-tools openssh-server
 
 echo ">>> Removing old Docker packages if any..."
-sudo apt-get purge -y docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc || true
-sudo apt-get autoremove -y
+apt-get purge -y docker.io docker-doc docker-compose docker-compose-plugin podman-docker containerd runc || true
+apt-get autoremove -y
 
-echo ">>> Enabling and starting SSH..."
-sudo systemctl enable ssh
-sudo systemctl start ssh
+echo ">>> Enabling and starting SSH service..."
+systemctl enable ssh
+systemctl start ssh
 
-echo ">>> Installing micro (latest from getmic.ro)..."
-sudo bash -c "cd /usr/local/bin && curl -fsSL https://getmic.ro | bash"
-sudo chmod +x /usr/local/bin/micro
+echo ">>> Installing latest micro editor from GitHub releases..."
+MICRO_BIN="/usr/local/bin/micro"
+if ! command -v micro &> /dev/null; then
+  MICRO_LATEST_URL=$(curl -s https://api.github.com/repos/zyedidia/micro/releases/latest | grep browser_download_url | grep linux64.tar.gz | cut -d '"' -f 4)
+  TMPDIR=$(mktemp -d)
+  curl -L "$MICRO_LATEST_URL" -o "$TMPDIR/micro.tar.gz"
+  tar -xzf "$TMPDIR/micro.tar.gz" -C "$TMPDIR"
+  install "$TMPDIR/micro" "$MICRO_BIN"
+  chmod +x "$MICRO_BIN"
+  rm -rf "$TMPDIR"
+else
+  echo "micro already installed, skipping."
+fi
 
-echo ">>> Adding Docker's official GPG keyring..."
-sudo mkdir -p /etc/apt/keyrings
-sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker-archive-keyring.gpg
-sudo chmod a+r /etc/apt/keyrings/docker-archive-keyring.gpg
+echo ">>> Setting up Docker repository and installing Docker..."
+if [ ! -f /etc/apt/keyrings/docker-archive-keyring.gpg ]; then
+  mkdir -p /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | tee /etc/apt/keyrings/docker-archive-keyring.gpg > /dev/null
+  chmod a+r /etc/apt/keyrings/docker-archive-keyring.gpg
+fi
 
-echo ">>> Adding Docker repository..."
-echo \
-"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
-$(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
-sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+ARCH=$(dpkg --print-architecture)
+UBUNTU_CODENAME=$(lsb_release -cs)
 
-sudo apt-get update
+DOCKER_LIST_FILE="/etc/apt/sources.list.d/docker.list"
+if ! grep -q "download.docker.com" "$DOCKER_LIST_FILE" 2>/dev/null; then
+  echo "deb [arch=$ARCH signed-by=/etc/apt/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $UBUNTU_CODENAME stable" > "$DOCKER_LIST_FILE"
+fi
 
-echo ">>> Installing Docker Engine and tools..."
-sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+apt-get update
+apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-echo ">>> Adding current user to docker group (requires logout/login)..."
-sudo usermod -aG docker "$USER" || echo "Failed to add user to docker group."
+echo ">>> Adding user '$USER_NAME' to docker group (logout/login required)..."
+if groups "$USER_NAME" | grep -q '\bdocker\b'; then
+  echo "User '$USER_NAME' is already in docker group."
+else
+  usermod -aG docker "$USER_NAME"
+  echo "User '$USER_NAME' added to docker group."
+fi
 
 echo ">>> Installing WireGuard kernel support..."
-sudo apt install -y linux-headers-$(uname -r) dkms wireguard-dkms
-sudo modprobe wireguard || echo "WireGuard module load failed"
-lsmod | grep wireguard || echo "WireGuard module not loaded"
+apt install -y linux-headers-$(uname -r) dkms wireguard-dkms
 
-echo ">>> Installing WireGuard Manager..."
-sudo curl -fsSL \
-  https://raw.githubusercontent.com/complexorganizations/wireguard-manager/main/wireguard-manager.sh \
-  -o /usr/local/bin/wireguard-manager.sh
-sudo chmod +x /usr/local/bin/wireguard-manager.sh
+if ! lsmod | grep -q wireguard; then
+  if ! modprobe wireguard; then
+    echo "Warning: WireGuard kernel module failed to load."
+  else
+    echo "WireGuard module loaded."
+  fi
+else
+  echo "WireGuard module already loaded."
+fi
 
-echo ">>> Launching WireGuard Manager (interactive)..."
-sudo bash /usr/local/bin/wireguard-manager.sh
+echo ">>> Installing WireGuard Manager script..."
+WIREGUARD_MANAGER_PATH="/usr/local/bin/wireguard-manager.sh"
+curl -fsSL https://raw.githubusercontent.com/complexorganizations/wireguard-manager/main/wireguard-manager.sh -o "$WIREGUARD_MANAGER_PATH"
+chmod +x "$WIREGUARD_MANAGER_PATH"
 
-echo ">>> Cloning HomeServer config repo to /home/HomeServer..."
-git clone https://github.com/pSmurf2321-Work/HomeServer.git /home/$USER/HomeServer
+if [[ "${1:-}" == "--wg-manager" ]]; then
+  echo ">>> Launching WireGuard Manager (interactive)..."
+  bash "$WIREGUARD_MANAGER_PATH"
+else
+  echo "WireGuard Manager install complete. To launch it interactively, run:"
+  echo "  sudo bash $WIREGUARD_MANAGER_PATH"
+  echo "Or rerun this script with --wg-manager argument."
+fi
+
+echo ">>> Cloning HomeServer config repo to $USER_HOME/HomeServer..."
+HOMESERVER_DIR="$USER_HOME/HomeServer"
+
+if [ -d "$HOMESERVER_DIR" ]; then
+  echo "HomeServer directory already exists. Attempting to update..."
+  git -C "$HOMESERVER_DIR" pull --rebase || echo "Git pull failed. You may want to check repository manually."
+else
+  sudo -u "$USER_NAME" git clone https://github.com/pSmurf2321-Work/HomeServer.git "$HOMESERVER_DIR"
+fi
+
+echo ">>> Setup complete. Remember to logout and login again for docker group changes to apply."
