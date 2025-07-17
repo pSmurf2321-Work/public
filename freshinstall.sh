@@ -31,6 +31,28 @@ USER_HOME=$(eval echo "~$USER_NAME")
 echo "Running as user: $USER_NAME"
 echo "User home directory: $USER_HOME"
 
+# --- RCLONE CONFIG BACKUP & RESTORE ---
+RCLONE_CONFIG_SRC="$USER_HOME/.config/rclone/rclone.conf"
+BACKUP_DIR="$USER_HOME/backups/rclone"
+RCLONE_CONFIG_BACKUP="$BACKUP_DIR/rclone.conf"
+
+mkdir -p "$BACKUP_DIR"
+
+if [[ -f "$RCLONE_CONFIG_SRC" ]]; then
+  echo "[BACKUP] Saving rclone config to $RCLONE_CONFIG_BACKUP"
+  cp "$RCLONE_CONFIG_SRC" "$RCLONE_CONFIG_BACKUP"
+else
+  echo "[BACKUP] No rclone config found at $RCLONE_CONFIG_SRC to backup."
+fi
+
+if [[ ! -f "$RCLONE_CONFIG_SRC" && -f "$RCLONE_CONFIG_BACKUP" ]]; then
+  echo "[RESTORE] Restoring rclone config from backup."
+  mkdir -p "$(dirname "$RCLONE_CONFIG_SRC")"
+  cp "$RCLONE_CONFIG_BACKUP" "$RCLONE_CONFIG_SRC"
+else
+  echo "[RESTORE] No rclone config restore needed."
+fi
+
 # --- 1. Check or create SSH key for GitHub access ---
 SSH_KEY="$USER_HOME/.ssh/id_ed25519"
 PUB_KEY="$SSH_KEY.pub"
@@ -196,7 +218,6 @@ echo "After that, place your .env file into $HOMESERVER_DIR if needed."
 echo "Then run your start-services.sh script from $HOMESERVER_DIR to start your Docker services."
 
 # --- 13. Make start/stop scripts globally accessible ---
-
 if [ -f "$HOMESERVER_DIR/scripts/start-services.sh" ]; then
   sudo ln -sf "$HOMESERVER_DIR/scripts/start-services.sh" /usr/local/bin/start-services
   sudo chmod +x "$HOMESERVER_DIR/scripts/start-services.sh"
@@ -209,8 +230,8 @@ if [ -f "$HOMESERVER_DIR/scripts/stop-services.sh" ]; then
   echo "Symlinked stop-services.sh to /usr/local/bin/stop-services"
 fi
 
-docker network create --subnet=172.18.0.0/24 VPN-network
-docker network create --subnet=172.19.0.0/24 Wireguard-network
-docker network create --subnet=172.20.0.0/24 HomeServer-network
+docker network create --subnet=172.18.0.0/24 VPN-network || true
+docker network create --subnet=172.19.0.0/24 Wireguard-network || true
+docker network create --subnet=172.20.0.0/24 HomeServer-network || true
 
 exit 0
