@@ -4,9 +4,6 @@ set -euo pipefail
 # Make sure $HOME/bin exists
 mkdir -p "$HOME/bin"
 
-# Make generate-service-scripts.sh executable
-chmod +x /home/homeserver/HomeServer/scripts/generate-service-scripts.sh
-
 # Add $HOME/bin to PATH in ~/.bashrc if not already there
 if ! grep -q 'export PATH="$HOME/bin:$PATH"' "$HOME/.bashrc"; then
   echo 'export PATH="$HOME/bin:$PATH"' >> "$HOME/.bashrc"
@@ -233,5 +230,17 @@ fi
 docker network create --subnet=172.18.0.0/24 VPN-network || true
 docker network create --subnet=172.19.0.0/24 Wireguard-network || true
 docker network create --subnet=172.20.0.0/24 HomeServer-network || true
+
+# Make generate-service-scripts.sh executable
+chmod +x /home/homeserver/HomeServer/scripts/generate-service-scripts.sh
+# Make system-rclone-nightly.sh executable
+chmod +x /home/homeserver/HomeServer/scripts/system-rclone-nightly.sh
+
+# Set up nightly rclone backup cron job @ 3AM
+echo "[CRON] Installing nightly backup @ 3AM to OneDrive..."
+
+CRON_JOB="0 3 * * * /home/homeserver/HomeServer/scripts/system-rclone-nightly.sh >/dev/null 2>&1"
+
+( crontab -l 2>/dev/null | grep -v 'system-rclone-nightly.sh' ; echo "$CRON_JOB" ) | crontab -
 
 exit 0
