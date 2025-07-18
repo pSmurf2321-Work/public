@@ -239,7 +239,7 @@ chmod +x /home/homeserver/HomeServer/scripts/system-rclone-nightly.sh
 # Set up nightly rclone backup cron job @ 3AM
 echo "[CRON] Installing nightly backup @ 3AM to OneDrive..."
 
-CRON_JOB="0 3 * * * /home/homeserver/HomeServer/scripts/system-rclone-nightly.sh >> /home/homeserver/backups/logs/cron/cron.log 2>&1"
+CRON_JOB="0 4 * * * /home/homeserver/HomeServer/scripts/system-rclone-nightly.sh >> /home/homeserver/backups/logs/cron/cron.log 2>&1"
 
 ( crontab -l 2>/dev/null | grep -v 'system-rclone-nightly.sh' ; echo "$CRON_JOB" ) | crontab -
 
