@@ -90,7 +90,7 @@ mkdir -p "$HOMESERVER_ROOT"/docker/{homepage/config,minecraft/server-{1,2}/data,
 mkdir -p "$HOMESERVER_ROOT/downloaded media"
 mkdir -p "$HOMESERVER_ROOT/scripts"
 mkdir -p "$HOMESERVER_ROOT/yaml"
-
+mkdir -p "$HOMESERVER_ROOT/backups/logs/cron"
 chown -R "$USER_NAME":"$USER_NAME" "$HOMESERVER_ROOT"
 
 # --- 4. Clone or update private repo via SSH ---
