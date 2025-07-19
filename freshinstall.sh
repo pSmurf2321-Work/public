@@ -20,6 +20,14 @@ case ":$PATH:" in
     ;;
 esac
 
+add_cronjob() {
+  local label="$1"
+  local job="$2"
+  echo "[CRON] Installing: $label"
+  ( crontab -l 2>/dev/null | grep -v "$label" ; echo "$job" ) | crontab -
+}
+
+
 echo "Setup done. You can now run generate-service-scripts.sh separately to generate scripts."
 
 USER_NAME="${SUDO_USER:-$(whoami)}"
@@ -239,12 +247,6 @@ chmod +x /home/homeserver/HomeServer/scripts/system-rclone-nightly.sh
 chmod +x /home/homeserver/HomeServer/scripts/duckdns.sh
 
 # Set up cronjobs
-add_cronjob() {
-  local label="$1"
-  local job="$2"
-  echo "[CRON] Installing: $label"
-  ( crontab -l 2>/dev/null | grep -v "$label" ; echo "$job" ) | crontab -
-}
 add_cronjob 'system-rclone-nightly.sh' "0 4 * * * /home/homeserver/HomeServer/scripts/system-rclone-nightly.sh >> /home/homeserver/backups/logs/cron/cron.log 2>&1"
 add_cronjob 'duckdns.sh' "*/5 * * * * /home/homeserver/HomeServer/scripts/duckdns.sh >/dev/null 2>&1"
 
