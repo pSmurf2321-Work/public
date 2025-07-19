@@ -114,7 +114,7 @@ mkdir -p "$USER_HOMESERVER_ROOT/scripts"
 mkdir -p "$USER_HOMESERVER_ROOT/yaml"
 mkdir -p "$USER_HOMESERVER_ROOT/backups/logs/cron"
 mkdir -p "$USER_HOMESERVER_ROOT/duckdns"
-mkdir -p "/etc/wireguard"
+sudo mkdir -p "/etc/wireguard"
 chown -R "$USER_NAME":"$USER_NAME" "$USER_HOMESERVER_ROOT"
 
 # --- 4. Clone or update private repo via SSH ---
