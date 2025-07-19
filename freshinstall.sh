@@ -245,7 +245,7 @@ CRON_JOB="0 4 * * * /home/homeserver/HomeServer/scripts/system-rclone-nightly.sh
 
 # Set up DuckDNS checks for every 5 minutes
 echo "[CRON] Installing 5 minute DuckDNS IP check..."
-CRON_JOB="*/5 * * * * /home/homeserver/HomeServer/scripts/duck.sh >/dev/null 2>&1"
-( crontab -l 2>/dev/null | grep -v 'duck.sh' ; echo "$CRON_JOB" ) | crontab -
+CRON_JOB="*/5 * * * * /home/homeserver/HomeServer/scripts/duckdns.sh >/dev/null 2>&1"
+( crontab -l 2>/dev/null | grep -v 'duckdns.sh' ; echo "$CRON_JOB" ) | crontab -
 
 exit 0
