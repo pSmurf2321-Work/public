@@ -87,17 +87,6 @@ fi
 SSH_KEY="$USER_HOME/.ssh/id_ed25519"
 PUB_KEY="$SSH_KEY.pub"
 
-if [ ! -f "$SSH_KEY" ]; then
-  echo "No SSH key found. Generating new SSH key..."
-  sudo -u "$USER_NAME" ssh-keygen -t ed25519 -C "setup@freshinstall" -f "$SSH_KEY" -N ""
-  echo
-  echo ">>> SSH public key (add this to your GitHub Deploy Keys or SSH keys):"
-  cat "$PUB_KEY"
-  echo
-  echo "Add this SSH key to GitHub, then re-run this script."
-  exit 1
-fi
-
 # Start ssh-agent and add key if not already added
 eval "$(ssh-agent -s)" > /dev/null
 ssh-add -l | grep -q "$SSH_KEY" || ssh-add "$SSH_KEY"
