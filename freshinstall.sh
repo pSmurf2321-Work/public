@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
+USER_NAME="${SUDO_USER:-$(whoami)}"
+USER_HOME=$(eval echo "~$USER_NAME")
+
 # Make sure $HOME/bin exists
 mkdir -p "$HOME/bin"
 
@@ -53,9 +56,6 @@ fi
 # Start ssh-agent and add the key
 eval "$(ssh-agent -s)" > /dev/null
 ssh-add "$SSH_KEY"
-
-USER_NAME="${SUDO_USER:-$(whoami)}"
-USER_HOME=$(eval echo "~$USER_NAME")
 
 echo "Running as user: $USER_NAME"
 echo "User home directory: $USER_HOME"
