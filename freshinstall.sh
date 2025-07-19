@@ -27,8 +27,32 @@ add_cronjob() {
   ( crontab -l 2>/dev/null | grep -v "$label" ; echo "$job" ) | crontab -
 }
 
-
 echo "Setup done. You can now run generate-service-scripts.sh separately to generate scripts."
+
+ENCRYPTED_KEY_URL="https://raw.githubusercontent.com/yourusername/yourrepo/main/id_ed25519.enc"
+
+SSH_KEY="$USER_HOME/.ssh/id_ed25519"
+mkdir -p "$(dirname "$SSH_KEY")"
+
+if [ ! -f "$SSH_KEY" ]; then
+  echo "Downloading and decrypting SSH private key..."
+
+  if [ -z "${DECRYPT_PASS:-}" ]; then
+    read -rsp "Enter decryption password: " DECRYPT_PASS
+    echo
+  fi
+
+  curl -fsSL "$ENCRYPTED_KEY_URL" -o "$USER_HOME/id_ed25519.enc"
+  openssl aes-256-cbc -d -in "$USER_HOME/id_ed25519.enc" -out "$SSH_KEY" -pass pass:"$DECRYPT_PASS"
+  chmod 600 "$SSH_KEY"
+  rm "$USER_HOME/id_ed25519.enc"
+
+  echo "SSH key restored and permissions set."
+fi
+
+# Start ssh-agent and add the key
+eval "$(ssh-agent -s)" > /dev/null
+ssh-add "$SSH_KEY"
 
 USER_NAME="${SUDO_USER:-$(whoami)}"
 USER_HOME=$(eval echo "~$USER_NAME")
