@@ -107,32 +107,32 @@ sudo apt-get update
 # --- 3. Create required folders ---
 export HOMESERVER_ROOT="$USER_HOME"
 
-mkdir -p "$USER_HOMESERVER_ROOT"/{backups/minecraft/server-{1,2},docker}
-mkdir -p "$USER_HOMESERVER_ROOT"/docker/{homepage/config,minecraft/server-{1,2}/data,notifiarr/config,nzbget/config,portainer/data,prowlarr/config,qbittorrent/config,radarr/config,sonarr/config,wireguard/config,watchtower,bazarr/config,vpnclient/config}
-mkdir -p "$USER_HOMESERVER_ROOT/downloaded media"
-mkdir -p "$USER_HOMESERVER_ROOT/scripts"
-mkdir -p "$USER_HOMESERVER_ROOT/yaml"
-mkdir -p "$USER_HOMESERVER_ROOT/backups/logs/cron"
-mkdir -p "$USER_HOMESERVER_ROOT/duckdns"
+mkdir -p "$HOMESERVER_ROOT"/{backups/minecraft/server-{1,2},docker}
+mkdir -p "$HOMESERVER_ROOT"/docker/{homepage/config,minecraft/server-{1,2}/data,notifiarr/config,nzbget/config,portainer/data,prowlarr/config,qbittorrent/config,radarr/config,sonarr/config,wireguard/config,watchtower,bazarr/config,vpnclient/config}
+mkdir -p "$HOMESERVER_ROOT/downloaded media"
+mkdir -p "$HOMESERVER_ROOT/scripts"
+mkdir -p "$HOMESERVER_ROOT/yaml"
+mkdir -p "$HOMESERVER_ROOT/backups/logs/cron"
+mkdir -p "$HOMESERVER_ROOT/duckdns"
 sudo mkdir -p "/etc/wireguard"
-chown -R "$USER_NAME":"$USER_NAME" "$USER_HOMESERVER_ROOT"
+chown -R "$USER_NAME":"$USER_NAME" "$HOMESERVER_ROOT"
 
 # --- 4. Clone or update private repo via SSH ---
 HOMESERVER_DIR="$USER_HOME/HomeServer"
 
-if [ -d "$USER_HOMESERVER_DIR" ]; then
-  if [ ! -d "$USER_HOMESERVER_DIR/.git" ]; then
-    echo "Folder $USER_HOMESERVER_DIR exists but is not a git repo. Removing it for fresh clone..."
-    sudo rm -rf "$USER_HOMESERVER_DIR"
+if [ -d "$HOMESERVER_DIR" ]; then
+  if [ ! -d "$HOMESERVER_DIR/.git" ]; then
+    echo "Folder $HOMESERVER_DIR exists but is not a git repo. Removing it for fresh clone..."
+    sudo rm -rf "$HOMESERVER_DIR"
   fi
 fi
 
-if [ ! -d "$USER_HOMESERVER_DIR" ]; then
+if [ ! -d "$HOMESERVER_DIR" ]; then
   echo "Cloning private repo via SSH..."
-  sudo -u "$USER_NAME" git clone git@github.com:pSmurf2321-Work/HomeServer.git "$USER_HOMESERVER_DIR"
+  sudo -u "$USER_NAME" git clone git@github.com:pSmurf2321-Work/HomeServer.git "$HOMESERVER_DIR"
 else
   echo "Repo already cloned, pulling latest changes..."
-  sudo -u "$USER_NAME" git -C "$USER_HOMESERVER_DIR" pull --rebase
+  sudo -u "$USER_NAME" git -C "$HOMESERVER_DIR" pull --rebase
 fi
 
 # --- 5. System update and base packages install ---
@@ -187,18 +187,18 @@ else
 fi
 
 # --- 8. Copy env.bak to .env ---
-if [ -f "$USER_HOMESERVER_DIR/etc/env.bak" ]; then
-  cp -f "$USER_HOMESERVER_DIR/etc/env.bak" "$USER_HOMESERVER_DIR/.env"
+if [ -f "$HOMESERVER_DIR/etc/env.bak" ]; then
+  cp -f "$HOMESERVER_DIR/etc/env.bak" "$HOMESERVER_DIR/.env"
   echo "Copied env.bak to .env, overwriting existing .env if present."
 else
-  echo "Warning: env.bak not found in $USER_HOMESERVER_DIR. .env file not created."
+  echo "Warning: env.bak not found in $HOMESERVER_DIR. .env file not created."
 fi
 
 # --- 9. Fix ownership and setgid bit on HomeServer directory ---
-echo ">>> Setting ownership and permissions for $USER_HOMESERVER_DIR..."
-sudo chown -R "$USER_NAME":"$USER_NAME" "$USER_HOMESERVER_DIR"
-sudo chmod -R u+rwX "$USER_HOMESERVER_DIR"
-find "$USER_HOMESERVER_DIR" -type d -exec sudo chmod g+s {} +
+echo ">>> Setting ownership and permissions for $HOMESERVER_DIR..."
+sudo chown -R "$USER_NAME":"$USER_NAME" "$HOMESERVER_DIR"
+sudo chmod -R u+rwX "$HOMESERVER_DIR"
+find "$HOMESERVER_DIR" -type d -exec sudo chmod g+s {} +
 
 echo "Ownership, permissions, and setgid bit set."
 
@@ -235,19 +235,19 @@ export PATH="$USER_HOME/bin:$PATH"
 echo
 echo ">>> Setup complete!"
 echo "Remember to log out and back in or reboot to apply docker group permissions."
-echo "After that, place your .env file into $USER_HOMESERVER_DIR if needed."
-echo "Then run your start-services.sh script from $USER_HOMESERVER_DIR to start your Docker services."
+echo "After that, place your .env file into $HOMESERVER_DIR if needed."
+echo "Then run your start-services.sh script from $HOMESERVER_DIR to start your Docker services."
 
 # --- 13. Make start/stop scripts globally accessible ---
-if [ -f "$USER_HOMESERVER_DIR/scripts/start-services.sh" ]; then
-  sudo ln -sf "$USER_HOMESERVER_DIR/scripts/start-services.sh" /usr/local/bin/start-services
-  sudo chmod +x "$USER_HOMESERVER_DIR/scripts/start-services.sh"
+if [ -f "$HOMESERVER_DIR/scripts/start-services.sh" ]; then
+  sudo ln -sf "$HOMESERVER_DIR/scripts/start-services.sh" /usr/local/bin/start-services
+  sudo chmod +x "$HOMESERVER_DIR/scripts/start-services.sh"
   echo "Symlinked start-services.sh to /usr/local/bin/start-services"
 fi
 
-if [ -f "$USER_HOMESERVER_DIR/scripts/stop-services.sh" ]; then
-  sudo ln -sf "$USER_HOMESERVER_DIR/scripts/stop-services.sh" /usr/local/bin/stop-services
-  sudo chmod +x "$USER_HOMESERVER_DIR/scripts/stop-services.sh"
+if [ -f "$HOMESERVER_DIR/scripts/stop-services.sh" ]; then
+  sudo ln -sf "$HOMESERVER_DIR/scripts/stop-services.sh" /usr/local/bin/stop-services
+  sudo chmod +x "$HOMESERVER_DIR/scripts/stop-services.sh"
   echo "Symlinked stop-services.sh to /usr/local/bin/stop-services"
 fi
 
@@ -267,7 +267,7 @@ add_cronjob 'system-rclone-nightly.sh' "0 4 * * * /home/homeserver/HomeServer/sc
 add_cronjob 'duckdns.sh' "*/5 * * * * /home/homeserver/HomeServer/scripts/duckdns.sh >/dev/null 2>&1"
 add_cronjob 'watch-wg-ip.sh' "*/5 * * * * /home/homeserver/HomeServer/scripts/watch-wg-ip.sh"
 
-sudo cp "$USER_HOMESERVER_DIR/configs/wireguard/wg0.conf" /etc/wireguard/wg0.conf
+sudo cp "$HOMESERVER_DIR/configs/wireguard/wg0.conf" /etc/wireguard/wg0.conf
 sudo chmod 600 /etc/wireguard/wg0.conf
 sudo chown root:root /etc/wireguard/wg0.conf
 
