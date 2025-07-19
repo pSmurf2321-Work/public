@@ -238,14 +238,14 @@ chmod +x /home/homeserver/HomeServer/scripts/generate-service-scripts.sh
 chmod +x /home/homeserver/HomeServer/scripts/system-rclone-nightly.sh
 chmod +x /home/homeserver/HomeServer/scripts/duckdns.sh
 
-# Set up nightly rclone backup cron job @ 3AM
-echo "[CRON] Installing nightly backup @ 3AM to OneDrive..."
-CRON_JOB="0 4 * * * /home/homeserver/HomeServer/scripts/system-rclone-nightly.sh >> /home/homeserver/backups/logs/cron/cron.log 2>&1"
-( crontab -l 2>/dev/null | grep -v 'system-rclone-nightly.sh' ; echo "$CRON_JOB" ) | crontab -
-
-# Set up DuckDNS checks for every 5 minutes
-echo "[CRON] Installing 5 minute DuckDNS IP check..."
-CRON_JOB="*/5 * * * * /home/homeserver/HomeServer/scripts/duckdns.sh >/dev/null 2>&1"
-( crontab -l 2>/dev/null | grep -v 'duckdns.sh' ; echo "$CRON_JOB" ) | crontab -
+# Set up cronjobs
+add_cronjob() {
+  local label="$1"
+  local job="$2"
+  echo "[CRON] Installing: $label"
+  ( crontab -l 2>/dev/null | grep -v "$label" ; echo "$job" ) | crontab -
+}
+add_cronjob 'system-rclone-nightly.sh' "0 4 * * * /home/homeserver/HomeServer/scripts/system-rclone-nightly.sh >> /home/homeserver/backups/logs/cron/cron.log 2>&1"
+add_cronjob 'duckdns.sh' "*/5 * * * * /home/homeserver/HomeServer/scripts/duckdns.sh >/dev/null 2>&1"
 
 exit 0
