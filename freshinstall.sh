@@ -46,7 +46,8 @@ if [ ! -f "$SSH_KEY" ]; then
   fi
 
   curl -fsSL "$ENCRYPTED_KEY_URL" -o "$USER_HOME/id_ed25519.enc"
-  openssl aes-256-cbc -d -in "$USER_HOME/id_ed25519.enc" -out "$SSH_KEY" -pass pass:"$DECRYPT_PASS"
+  openssl aes-256-cbc -d -pbkdf2 -in "$USER_HOME/id_ed25519.enc" -out "$SSH_KEY" -pass pass:"$DECRYPT_PASS"
+  
   chmod 600 "$SSH_KEY"
   rm "$USER_HOME/id_ed25519.enc"
 
