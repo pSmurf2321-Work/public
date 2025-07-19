@@ -274,4 +274,17 @@ sudo chown root:root /etc/wireguard/wg0.conf
 sudo systemctl enable wg-quick@wg0
 sudo systemctl start wg-quick@wg0
 
+echo
+echo ">>> Validating WireGuard service status..."
+
+if sudo systemctl is-active --quiet wg-quick@wg0; then
+  echo "WireGuard service wg-quick@wg0 is running."
+else
+  echo "Warning: WireGuard service wg-quick@wg0 is NOT running!"
+  echo "Check /etc/wireguard/wg0.conf and system logs (journalctl -u wg-quick@wg0) for errors."
+fi
+
+echo
+echo ">>> Setup complete! Please reboot or log out/in to apply docker group and network changes."
+
 exit 0
