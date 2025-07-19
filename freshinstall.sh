@@ -8,9 +8,9 @@ USER_HOME=$(eval echo "~$USER_NAME")
 mkdir -p "$USER_HOME/bin"
 
 # Add $USER_HOME/bin to PATH in ~/.bashrc if not already there
-if ! grep -q 'export PATH="$USER_HOME/bin:$PATH"' "$USER_HOME/.bashrc"; then
-  echo 'export PATH="$USER_HOME/bin:$PATH"' >> "$USER_HOME/.bashrc"
-  echo "Added \$USER_HOME/bin to PATH in ~/.bashrc"
+if ! grep -q 'export PATH="$HOME/bin:$PATH"' "$USER_HOME/.bashrc"; then
+  echo 'export PATH="$HOME/bin:$PATH"' >> "$USER_HOME/.bashrc"
+  echo "Added \$HOME/bin to PATH in ~/.bashrc"
 fi
 
 # Source ~/.bashrc to update current session PATH (only if not already in PATH)
