@@ -114,6 +114,7 @@ mkdir -p "$HOMESERVER_ROOT/scripts"
 mkdir -p "$HOMESERVER_ROOT/yaml"
 mkdir -p "$HOMESERVER_ROOT/backups/logs/cron"
 mkdir -p "$HOMESERVER_ROOT/duckdns"
+mkdir -p "/etc/wireguard"
 chown -R "$USER_NAME":"$USER_NAME" "$HOMESERVER_ROOT"
 
 # --- 4. Clone or update private repo via SSH ---
@@ -259,9 +260,18 @@ docker network create --subnet=172.20.0.0/24 HomeServer-network || true
 chmod +x /home/homeserver/HomeServer/scripts/generate-service-scripts.sh
 chmod +x /home/homeserver/HomeServer/scripts/system-rclone-nightly.sh
 chmod +x /home/homeserver/HomeServer/scripts/duckdns.sh
+chmod +x /home/homeserver/HomeServer/scripts/watch-wg-ip.sh
 
 # Set up cronjobs
 add_cronjob 'system-rclone-nightly.sh' "0 4 * * * /home/homeserver/HomeServer/scripts/system-rclone-nightly.sh >> /home/homeserver/backups/logs/cron/cron.log 2>&1"
 add_cronjob 'duckdns.sh' "*/5 * * * * /home/homeserver/HomeServer/scripts/duckdns.sh >/dev/null 2>&1"
+add_cronjob 'watch-wg-ip.sh' "*/5 * * * * /home/homeserver/HomeServer/scripts/watch-wg-ip.sh"
+
+sudo cp "$HOMESERVER_DIR/configs/wireguard/wg0.conf" /etc/wireguard/wg0.conf
+sudo chmod 600 /etc/wireguard/wg0.conf
+sudo chown root:root /etc/wireguard/wg0.conf
+
+sudo systemctl enable wg-quick@wg0
+sudo systemctl start wg-quick@wg0
 
 exit 0
