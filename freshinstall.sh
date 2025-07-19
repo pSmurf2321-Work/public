@@ -91,6 +91,7 @@ mkdir -p "$HOMESERVER_ROOT/downloaded media"
 mkdir -p "$HOMESERVER_ROOT/scripts"
 mkdir -p "$HOMESERVER_ROOT/yaml"
 mkdir -p "$HOMESERVER_ROOT/backups/logs/cron"
+mkdir -p "$HOMESERVER_ROOT/duckdns"
 chown -R "$USER_NAME":"$USER_NAME" "$HOMESERVER_ROOT"
 
 # --- 4. Clone or update private repo via SSH ---
@@ -227,20 +228,23 @@ if [ -f "$HOMESERVER_DIR/scripts/stop-services.sh" ]; then
   echo "Symlinked stop-services.sh to /usr/local/bin/stop-services"
 fi
 
+# Create docker networks
 docker network create --subnet=172.18.0.0/24 VPN-network || true
 docker network create --subnet=172.19.0.0/24 Wireguard-network || true
 docker network create --subnet=172.20.0.0/24 HomeServer-network || true
 
-# Make generate-service-scripts.sh executable
+# Make scripts executable
 chmod +x /home/homeserver/HomeServer/scripts/generate-service-scripts.sh
-# Make system-rclone-nightly.sh executable
 chmod +x /home/homeserver/HomeServer/scripts/system-rclone-nightly.sh
+chmod +x /home/homeserver/HomeServer/scripts/duckdns.sh
 
 # Set up nightly rclone backup cron job @ 3AM
 echo "[CRON] Installing nightly backup @ 3AM to OneDrive..."
-
 CRON_JOB="0 4 * * * /home/homeserver/HomeServer/scripts/system-rclone-nightly.sh >> /home/homeserver/backups/logs/cron/cron.log 2>&1"
 ( crontab -l 2>/dev/null | grep -v 'system-rclone-nightly.sh' ; echo "$CRON_JOB" ) | crontab -
+
+# Set up DuckDNS checks for every 5 minutes
+echo "[CRON] Installing 5 minute DuckDNS IP check..."
 CRON_JOB="*/5 * * * * /home/homeserver/HomeServer/scripts/duck.sh >/dev/null 2>&1"
 ( crontab -l 2>/dev/null | grep -v 'duck.sh' ; echo "$CRON_JOB" ) | crontab -
 
