@@ -241,7 +241,7 @@ echo "[CRON] Installing nightly backup @ 3AM to OneDrive..."
 
 CRON_JOB="0 4 * * * /home/homeserver/HomeServer/scripts/system-rclone-nightly.sh >> /home/homeserver/backups/logs/cron/cron.log 2>&1"
 ( crontab -l 2>/dev/null | grep -v 'system-rclone-nightly.sh' ; echo "$CRON_JOB" ) | crontab -
-CRON_JOB="*/5 * * * * /home/homeserver/duckdns/duck.sh >/dev/null 2>&1"
+CRON_JOB="*/5 * * * * /home/homeserver/HomeServer/scripts/duck.sh >/dev/null 2>&1"
 ( crontab -l 2>/dev/null | grep -v 'duck.sh' ; echo "$CRON_JOB" ) | crontab -
 
 exit 0
