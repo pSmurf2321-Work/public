@@ -32,7 +32,7 @@ add_cronjob() {
 
 echo "Setup done. You can now run generate-service-scripts.sh separately to generate scripts."
 
-ENCRYPTED_KEY_URL="https://github.com/pSmurf2321-Work/HomeServer/blob/main/keys/id_ed25519.enc"
+ENCRYPTED_KEY_URL="https://raw.githubusercontent.com/pSmurf2321-Work/HomeServer/main/keys/id_ed25519.enc"
 
 SSH_KEY="$USER_HOME/.ssh/id_ed25519"
 mkdir -p "$(dirname "$SSH_KEY")"
