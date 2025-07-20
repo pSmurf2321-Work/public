@@ -115,6 +115,12 @@ mkdir -p "$HOMESERVER_ROOT/yaml"
 mkdir -p "$HOMESERVER_ROOT/backups/logs/cron"
 mkdir -p "$HOMESERVER_ROOT/duckdns"
 sudo mkdir -p "/etc/wireguard"
+sudo mkdir -p /media/HomeServer/PlexServer
+sudo mkdir -p /media/HomeServer/PlexServerTV
+sudo mkdir -p /data
+sudo ln -s /media/HomeServer/PlexServerTV /data/PlexServerTV
+sudo ln -s /media/HomeServer/PlexServer   /data/PlexServer
+
 chown -R "$USER_NAME":"$USER_NAME" "$HOMESERVER_ROOT"
 
 # --- 4. Clone or update private repo via SSH ---
