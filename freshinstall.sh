@@ -4,16 +4,16 @@ set -euo pipefail
 USER_NAME="${SUDO_USER:-$(whoami)}"
 USER_HOME=$(eval echo "~$USER_NAME")
 
-# Make sure $USER_HOME/bin exists
+# --- Make sure $USER_HOME/bin exists
 mkdir -p "$USER_HOME/bin"
 
-# Add $USER_HOME/bin to PATH in ~/.bashrc if not already there
+# --- Add $USER_HOME/bin to PATH in ~/.bashrc if not already there
 if ! grep -q 'export PATH="$HOME/bin:$PATH"' "$USER_HOME/.bashrc"; then
   echo 'export PATH="$HOME/bin:$PATH"' >> "$USER_HOME/.bashrc"
   echo "Added \$HOME/bin to PATH in ~/.bashrc"
 fi
 
-# Source ~/.bashrc to update current session PATH (only if not already in PATH)
+# --- Source ~/.bashrc to update current session PATH (only if not already in PATH)
 case ":$PATH:" in
   *":$USER_HOME/bin:"*) ;;
   *)
@@ -54,9 +54,9 @@ if [ ! -f "$SSH_KEY" ]; then
   echo "SSH key restored and permissions set."
 fi
 
-# Start ssh-agent and add the key
+# --- Start ssh-agent and add key if not already added
 eval "$(ssh-agent -s)" > /dev/null
-ssh-add "$SSH_KEY"
+ssh-add -l | grep -q "$SSH_KEY" || ssh-add "$SSH_KEY"
 
 echo "Running as user: $USER_NAME"
 echo "User home directory: $USER_HOME"
@@ -83,15 +83,11 @@ else
   echo "[RESTORE] No rclone config restore needed."
 fi
 
-# --- 1. Check or create SSH key for GitHub access ---
+# --- Check or create SSH key for GitHub access ---
 SSH_KEY="$USER_HOME/.ssh/id_ed25519"
 PUB_KEY="$SSH_KEY.pub"
 
-# Start ssh-agent and add key if not already added
-eval "$(ssh-agent -s)" > /dev/null
-ssh-add -l | grep -q "$SSH_KEY" || ssh-add "$SSH_KEY"
-
-# --- 2. Docker GPG key and repository setup ---
+# --- Docker GPG key and repository setup ---
 sudo mkdir -p /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor | sudo tee /etc/apt/keyrings/docker-archive-keyring.gpg > /dev/null
 sudo chmod a+r /etc/apt/keyrings/docker-archive-keyring.gpg
@@ -104,7 +100,7 @@ echo "deb [arch=$ARCH signed-by=/etc/apt/keyrings/docker-archive-keyring.gpg] ht
 sudo apt-get clean
 sudo apt-get update
 
-# --- 3. Create required folders ---
+# --- Create required folders ---
 export HOMESERVER_ROOT="$USER_HOME"
 
 mkdir -p "$HOMESERVER_ROOT"/{backups/minecraft/server-{1,2},docker}
@@ -123,7 +119,7 @@ sudo ln -s /media/HomeServer/PlexServer   /data/PlexServer
 
 chown -R "$USER_NAME":"$USER_NAME" "$HOMESERVER_ROOT"
 
-# --- 4. Clone or update private repo via SSH ---
+# --- Clone or update private repo via SSH ---
 HOMESERVER_DIR="$USER_HOME/HomeServer"
 
 if [ -d "$HOMESERVER_DIR" ]; then
@@ -141,7 +137,7 @@ else
   sudo -u "$USER_NAME" git -C "$HOMESERVER_DIR" pull --rebase
 fi
 
-# --- 5. System update and base packages install ---
+# --- System update and base packages install ---
 echo ">>> Updating package lists and installing base tools..."
 sudo apt update
 sudo apt install -y curl ca-certificates gnupg lsb-release
@@ -155,18 +151,27 @@ if ! ubuntu-drivers autoinstall; then
   echo "No proprietary drivers found or required."
 fi
 
+# --- Utilities --- 
 echo ">>> Installing common utilities..."
-sudo apt install -y curl wget git net-tools lsd mc micro rclone btop tldr bash-completion resolvconf wireguard-tools openssh-server
+sudo apt install -y curl wget git xrdp net-tools lsd mc micro rclone btop tldr bash-completion resolvconf wireguard-tools openssh-server
+
 
 echo ">>> Removing old Docker packages if any..."
 sudo apt-get purge -y docker.io docker-doc docker-compose docker-compose-plugin podman-docker containerd runc || true
 sudo apt-get autoremove -y
 
+# --- SSH --- 
 echo ">>> Enabling and starting SSH service..."
 sudo systemctl enable ssh
 sudo systemctl start ssh
 
-# --- 6. Install latest micro editor from GitHub releases ---
+# --- RDP --- 
+echo ">>> Enabling and starting RDP service..."
+sudo systemctl enable xrdp
+sudo systemctl start xrdp
+
+
+# --- Install latest micro editor from GitHub releases ---
 MICRO_BIN="/usr/local/bin/micro"
 if ! command -v micro &> /dev/null; then
   MICRO_LATEST_URL=$(curl -s https://api.github.com/repos/zyedidia/micro/releases/latest | grep browser_download_url | grep linux64.tar.gz | cut -d '"' -f 4)
@@ -180,7 +185,7 @@ else
   echo "micro already installed, skipping."
 fi
 
-# --- 7. Install Docker packages ---
+# --- Install Docker packages ---
 sudo apt-get update
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
@@ -192,7 +197,7 @@ else
   echo "User '$USER_NAME' added to docker group."
 fi
 
-# --- 8. Copy env.bak to .env ---
+# --- Copy env.bak to .env ---
 if [ -f "$HOMESERVER_DIR/etc/env.bak" ]; then
   cp -f "$HOMESERVER_DIR/etc/env.bak" "$HOMESERVER_DIR/.env"
   echo "Copied env.bak to .env, overwriting existing .env if present."
