@@ -262,6 +262,9 @@ if [ -f "$HOMESERVER_DIR/scripts/stop-services.sh" ]; then
   echo "Symlinked stop-services.sh to /usr/local/bin/stop-services"
 fi
 
+sudo adduser "$USER" ssl-cert
+echo "startxfce4" > "$USER_HOME/.xsession"
+
 # Create docker networks
 docker network create --subnet=172.18.0.0/24 VPN-network || true
 docker network create --subnet=172.19.0.0/24 Wireguard-network || true
