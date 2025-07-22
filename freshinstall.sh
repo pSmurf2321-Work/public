@@ -61,6 +61,10 @@ ssh-add -l | grep -q "$SSH_KEY" || ssh-add "$SSH_KEY"
 echo "Running as user: $USER_NAME"
 echo "User home directory: $USER_HOME"
 
+# --- python install ---
+sudo apt update && sudo apt install -y python3 python3-pip
+
+
 # --- RCLONE CONFIG BACKUP & RESTORE ---
 RCLONE_CONFIG_SRC="$USER_HOME/.config/rclone/rclone.conf"
 BACKUP_DIR="$USER_HOME/backups/rclone"
