@@ -61,9 +61,6 @@ ssh-add -l | grep -q "$SSH_KEY" || ssh-add "$SSH_KEY"
 echo "Running as user: $USER_NAME"
 echo "User home directory: $USER_HOME"
 
-# --- python install ---
-sudo apt update && sudo apt install -y python3 python3-pip
-
 
 # --- RCLONE CONFIG BACKUP & RESTORE ---
 RCLONE_CONFIG_SRC="$USER_HOME/.config/rclone/rclone.conf"
@@ -157,7 +154,7 @@ fi
 
 # --- Utilities --- 
 echo ">>> Installing common utilities..."
-sudo apt install -y curl wget git xrdp net-tools lsd mc micro rclone btop tldr bash-completion resolvconf wireguard-tools openssh-server
+sudo apt install -y curl wget git xrdp python3 python3-pip net-tools lsd mc micro rclone btop tldr bash-completion resolvconf wireguard-tools openssh-server
 
 
 echo ">>> Removing old Docker packages if any..."
