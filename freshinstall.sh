@@ -106,7 +106,7 @@ export HOMESERVER_ROOT="$USER_HOME"
 
 mkdir -p "$HOMESERVER_ROOT"/{backups/minecraft/server-{1,2},docker}
 mkdir -p "$HOMESERVER_ROOT"/docker/{homepage/configs,minecraft/server-{1,2}/data,notifiarr/configs,nzbget/configs,portainer/data,prowlarr/configs,qbittorrent/configs,radarr/configs,sonarr/configs,wireguard/configs,watchtower,bazarr/configs,vpnclient/configs}
-mkdir -p "$HOMESERVER_ROOT/downloaded media"
+mkdir -p "$HOMESERVER_ROOT"/downloaded-media/{completed/{tv,movies},intermediate,incomplete,tmp}
 mkdir -p "$HOMESERVER_ROOT/scripts"
 mkdir -p "$HOMESERVER_ROOT/yaml"
 mkdir -p "$HOMESERVER_ROOT/backups/logs/cron"
